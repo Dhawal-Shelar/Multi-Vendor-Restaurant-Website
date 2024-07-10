@@ -1,0 +1,57 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="d-block m-auto "          style="width : 100vw ; background:#D9D9D6" >
+    <div class="card p-4 m-10" style="width: 18rem; padding:10px; background:#D9D9D6">
+        <img class="card-img-top p-2" src="{% static "logo.png" %}" alt="Card image cap" style="margin:10px ;background:#D9D9D6">
+     
+      </div>
+    <h4 class = "p-3"> 
+        World's Affortable Food's is here </h4>
+</div>
+<div class="container-fluid" >
+    <div class=" d-flex  border-right border-primary" >
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar h-100"style="border-right: 1px solid black;" >
+          <form action="/deal" method="POST">
+            {% csrf_token %}
+            <ul class="nav flex-column " >
+                <h4 class = "p-3"> Menu ({{counts}})</h4>
+               
+                <div class="container-fluid">
+                    <div class="row">
+                      
+                            <div class="p-10" style="padding :5px;">
+                                <ul class="nav flex-column "  style="width:100">
+
+                                    {% for data in cat %}
+                                    <li class="nav-item border-bottom p-1 " style="width:230px; background:#D9D9D6; display:flex; align-items:center">
+                                        <a class="nav-link active" href="{% url 'deals' %}?category={{ data.category_name }}" style="width:100px" name="{{ data.category_name }}">{{ data.category_name }}</a>
+                                        <p>Count</p>
+                                    </li>
+                                    {% endfor %}
+                                    
+                                   
+                                    <!-- Add more items as needed -->
+                                </ul>
+                            </div>
+                        
+                        </ul>
+                       
+          </form>
+                  
+                      
+
+        </nav>
+
+        {% include "products.html" %}
+       
+         <!-- Main and search componnets -->
+     
+      
+    </div>
+ 
+  
+</div>
+{% endblock content %}
