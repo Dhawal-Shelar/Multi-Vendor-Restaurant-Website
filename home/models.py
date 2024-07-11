@@ -25,3 +25,30 @@ class Menu(models.Model):
     
     def __str__(self) -> str:
         return self.item_name
+    
+    
+
+class UserModel(models.Model):
+    
+    username = models.CharField(max_length=255)
+    email = models.EmailField()
+    password = models.CharField(max_length=255)
+    created_date = models.DateTimeField(auto_now_add=True)
+    
+    
+    def __str__(self):
+        return self.name
+    
+    
+    
+class  OrderItems(models.Model):
+    
+    user = models.ForeignKey(UserModel,on_delete = models.CASCADE)
+    items = models.ForeignKey(Menu,on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    created_date = models.DateField(auto_created=True)
+    
+    
+    def __str__(self):
+        return self.user.username
+    
