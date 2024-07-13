@@ -14,7 +14,7 @@
                 {% if message %}
                 <h1> {{message}}</h1>
                 {% endif %}
-                <form method="POST" action="/login" class="mt-4">
+                <form method="POST" action="/login/" class="mt-4">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="username">Username</label>
@@ -25,7 +25,7 @@
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">Login</button>
-                    <p>Doesn't Have An Account <a href="/sign-in">Sign up</a></p>
+                    <p>Doesn't Have An Account <a href="/sign-in/">Sign up</a></p>
                 </form>
             </div>
         </div>

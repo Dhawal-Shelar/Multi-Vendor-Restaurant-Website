@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="margin: 10px;">
+    <h2>Your Cart</h2>
+    {% if cart_items %}
+        {% for cart in cart_items %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    Cart ID: {{ cart.pk }}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Items in Cart</h5>
+                    <ul class="list-group">
+                        {% for order_item in cart.cart_items.all %}
+                            <li class="list-group-item">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <strong>{{ order_item.items.item_name }}</strong><br>
+                                        Quantity: {{ order_item.quantity }}<br>
+                                        Date Added: {{ order_item.created_date }}
+                                    </div>
+                                    <div class="col-md-4 text-right">
+                                        Price: ${{ order_item.items.item_price }}
+                                    </div>
+                                </div>
+                                <!-- Additional items -->
+                                <ul>
+                                    {% for item in order_item.items.menu_set.all %}
+                                    jjj
+                                        <li>{{ item.item_name }}kjk</li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer text-muted">
+                    Date Confirmed: {{ cart.date_confirm }}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Your cart is empty.</p>
+    {% endif %}
+</div>
+{% endblock content %}

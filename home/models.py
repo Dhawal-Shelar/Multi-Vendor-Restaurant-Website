@@ -37,7 +37,7 @@ class UserModel(models.Model):
     
     
     def __str__(self):
-        return self.name
+        return self.username
     
     
     
@@ -46,9 +46,21 @@ class  OrderItems(models.Model):
     user = models.ForeignKey(UserModel,on_delete = models.CASCADE)
     items = models.ForeignKey(Menu,on_delete=models.CASCADE)
     quantity = models.IntegerField()
-    created_date = models.DateField(auto_created=True)
+    created_date = models.DateField(auto_now_add =True)
     
     
     def __str__(self):
         return self.user.username
     
+
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE ,blank=True,null=True) 
+    cart_items = models.ForeignKey(OrderItems, on_delete=models.CASCADE)
+    
+    is_confirm = models.BooleanField(default=False)
+    date_confirm = models.DateField()
+
+    def __str__(self):
+        return f"Cart #{self.pk} - Active: {self.is_confirm}"

@@ -9,50 +9,42 @@
        </div>
        <div class="d-flex flex-wrap gap-3 p-4">
         {% for item in data %}
-
-        <div class="card m-2" style="width: 18rem;">
-          <img class="card-img-top" src={{item.item_img.url}} alt="Card image cap">
+        <div class="card m-2" style="width: 18rem; height:400px ;border-raidus:25px" >
+          <img class="card-img-top" src="{{ item.item_img.url }}" alt="Card image cap" style="height: 150px; padding:1px">
           <div class="card-body">
-            <p class="card-text">{{item.description}}</p>
-            <button class = "btn btn-primary">Add Cart </button>
+            <p class="card-text" style="font-size: 14px;">  {{ item.description|truncatewords_html:20 }}</p>
+            <br>
+            <h4>
+              {{item.item_name}}
+            </h4>
+            <p>
+              <span style="text-decoration: line-through;">$ {{ item.item_price }}</span>
+              <span class="text-danger ml-2">$ {{ item.discount_price }}</span>
+            </p>
+              
+            
+            <a class="btn btn-primary" href="{% url 'add_cart' item.id %}">Add Cart</a>
           </div>
         </div>
-        
-        {% endfor %}
+    {% endfor %}
+    
       
 
 
 
-          <div class="card m-2" style="width: 18rem;">
-            <img class="card-img-top" src="..." alt="Card image cap">
-            <div class="card-body">
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            </div>
-          </div>
+     
 
 
 
 
 
-          <div class="card m-2" style="width: 18rem;">
-            <img class="card-img-top" src="..." alt="Card image cap">
-            <div class="card-body">
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            </div>
-          </div>
+     
 
 
 
-          <div class="card m-2" style="width: 18rem;">
-            <img class="card-img-top" src="..." alt="Card image cap">
-            <div class="card-body">
-              <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            </div>
-          </div>
 
 
-
-       </div>
+      
     </div>    
 
 

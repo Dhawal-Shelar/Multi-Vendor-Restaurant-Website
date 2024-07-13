@@ -28,7 +28,7 @@
                                     {% for data in cat %}
                                     <li class="nav-item border-bottom p-1 " style="width:230px; background:#D9D9D6; display:flex; align-items:center">
                                         <a class="nav-link active" href="{% url 'deals' %}?category={{ data.category_name }}" style="width:100px" name="{{ data.category_name }}">{{ data.category_name }}</a>
-                                        <p>Count</p>
+                                        <p></p>
                                     </li>
                                     {% endfor %}
                                     
