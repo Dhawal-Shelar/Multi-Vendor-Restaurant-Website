@@ -19,7 +19,7 @@ def index(request):
 
 
 def main(request):
-    cat = Category.objects.all()  # Get all categories
+    cat = Category.objects.all() 
     
     category = request.GET.get('category')
     counts = Menu.objects.count()
@@ -30,8 +30,7 @@ def main(request):
     if category:
         data = Menu.objects.filter(cat_name__category_name=str(category))
         counts = Menu.objects.filter(cat_name__category_name=str(category)).count()
-    
-    # Pass all context data in a single dictionary to render
+
     context = {
         'cat': cat,
         'data': data,
@@ -74,10 +73,9 @@ def remove_cart(request, item_id):
         user = get_object_or_404(UserModel, username=username)
         menu_item = get_object_or_404(Menu, pk=item_id)
         
-        # Retrieve the order item for this user and menu item
-        order_item = get_object_or_404(OrderItems, user=user, items=menu_item)
         
-        # If the order item exists, adjust quantity or delete if quantity <= 0
+        order_item = get_object_or_404(OrderItems, user=user, items=menu_item)
+
         if order_item.quantity > 0:
             order_item.quantity -= 1
             if order_item.quantity == 0:
@@ -85,7 +83,7 @@ def remove_cart(request, item_id):
             else:
                 order_item.save()
     
-    return redirect('view_cart')  # Redirect to the cart page after removal
+    return redirect('view_cart')  
 
 
         
@@ -100,18 +98,18 @@ def view_cart(request):
             user_obj = UserModel.objects.get(username=user)
             order_items = OrderItems.objects.filter(user=user_obj)
 
-            # Calculate total amount
+     
             total_amount = sum(item.items.item_price * item.quantity for item in order_items)
             print(total_amount,'----------')
 
         except UserModel.DoesNotExist:
-            # Handle user not found error as per your application logic
+    
             pass
     
     context = {
         'order_items': order_items,
         'total_amount': total_amount,
-        'RAZORPAY_KEY_ID': RAZORPAY_KEY_ID,  # Assuming you have RAZORPAY_KEY_ID in your settings
+        'RAZORPAY_KEY_ID': RAZORPAY_KEY_ID, 
     }
 
     return render(request, 'cart.html', context)
@@ -139,32 +137,49 @@ import json
 def create_checkout_session(request):
     if request.method == 'POST':
         try:
-         
-            client = razorpay.Client(auth=(RAZORPAY_KEY_ID,RAZORPAY_KEY_SECRET))
+            user = request.session.get('username')
+            if not user:
+                return JsonResponse({'error': 'User not authenticated'}, status=400)
             
-           
+            # Assuming UserModel is the model representing your user
+            user_instance = UserModel.objects.get(username=user)
+            
+            order_items = OrderItems.objects.filter(user=user_instance)
+            print(order_items, "this my order items")
+            
+            client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+            
             data = json.loads(request.body)
-
-            print(data,'ppppppppp')
             data['amount'] = int(data['amount']) * 100
-            
     
             razorpay_order = client.order.create(data=data)
-
-
+            
+            if razorpay_order['status'] == 'created':
+                # Create a Cart instance
+                cart = Cart.objects.create(user=user_instance, cart_items=order_items.first(), is_confirm=True, date_confirm=datetime.now())
+         
+                cart.save()
+          
+                order_items.delete()
+            
             response_data = {
                 'orderId': razorpay_order['id'],
-                'amount':  int(data['amount']) * 100,
+                'amount': int(data['amount']),
                 'currency': data['currency'],
-            
+                'status': razorpay_order['status'] 
             }
-            print(response_data,'my response ')
+            
             return JsonResponse(response_data)
 
+        except razorpay.errors.BadRequestError as e:
+            print(e)
+            return JsonResponse({'error': str(e)}, status=400)
+        
         except Exception as e:
-            return JsonResponse({'error': str(e)})
+            print(e)
+            return JsonResponse({'error': str(e)}, status=500)
 
-    return JsonResponse({'error': 'POST request required'})
+    return JsonResponse({'error': 'POST request required'}, status=405)
 
    
 def logout(request):
