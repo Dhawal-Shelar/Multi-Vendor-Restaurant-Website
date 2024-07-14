@@ -1,6 +1,6 @@
 env/
 venv/
 
-
+home/__pycache__/
 
 .env

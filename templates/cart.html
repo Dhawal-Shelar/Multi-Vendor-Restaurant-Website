@@ -1,93 +1,92 @@
+<!-- checkout.html -->
+
 {% extends "base.html" %}
 {% load static %}
 
 {% block content %}
 <section class="h-100 h-custom" style="background-color: #eee;">
     <div class="container py-5 h-100">
-      <div class="row d-flex justify-content-center align-items-center h-100">
-        <div class="col">
-          <div class="card">
-            <div class="card-body p-4">
-              <div class="row">
-                <div class="col-lg-7">
-                  <h5 class="mb-3"><a href="{% url 'deals' %}" class="text-body"><i class="fas fa-long-arrow-alt-left me-2"></i>Continue shopping</a></h5>
-                  <hr>
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                      <p class="mb-1">Shopping cart</p>
-                      <p class="mb-0">You have {{ order_items|length }} items in your cart</p>
-                    </div>
-                    <div>
-                      <p class="mb-0"><span class="text-muted">Sort by:</span> <a href="#!" class="text-body">price <i class="fas fa-angle-down mt-1"></i></a></p>
-                    </div>
-                  </div>
-                  {% for item in order_items %}
-                  <div class="card mb-3">
-                    <div class="card-body">
-                      <div class="d-flex justify-content-between">
-                        <div class="d-flex flex-row align-items-center">
-                          <div>
-                            <img src="{{ item.items.item_img.url }}" class="img-fluid rounded-3" alt="Shopping item" style="width: 65px;">
-                          </div>
-                          <div class="ms-3">
-                            <h5>{{ item.items.item_name }}</h5>
-                            <p class="small mb-0">{{ item.items.description }}</p>
-                          </div>
-                        </div>
-                        <div class="d-flex flex-row align-items-center">
-                          <div style="width: 50px;">
-                            <h5 class="fw-normal mb-0">{{ item.quantity }}</h5>
-                          </div>
-                          <div style="width: 80px;">
-                            <h5 class="mb-0">${{ item.items.item_price }}</h5>
-                          </div>
-                          <a href="#!" style="color: #cecece;"><i class="fas fa-trash-alt"></i></a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {% endfor %}
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-lg-7">
+                                <h5 class="mb-3"><a href="{% url 'deals' %}" class="text-body"><i
+                                            class="fas fa-long-arrow-alt-left me-2"></i>Continue shopping</a></h5>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div>
+                                        <p class="mb-1">Shopping cart</p>
+                                        <p class="mb-0">You have {{ order_items|length }} items in your cart</p>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0"><span class="text-muted">Sort by:</span> <a href="#!"
+                                                class="text-body">price <i
+                                                    class="fas fa-angle-down mt-1"></i></a></p>
+                                    </div>
+                                </div>
+                                {% for item in order_items %}
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="d-flex flex-row align-items-center">
+                                                <div>
+                                                    <h5>{{ item.items.item_name }}</h5>
+                                                </div>
+                                                <div class="ms-3">
+                                                   
+                                                 
+                                                    <p class="small mb-0">Quantity: {{ item.quantity }}</p>
+                                                    <p class="small mb-0">Price: {{ item.items.item_price }}</p>
+                                                    <a class="btn btn-primary" href="{% url 'remove_cart' item.items.id %}">Remove</a>
 
-                      <hr class="my-4">
-                      <div class="d-flex justify-content-between">
-                        <p class="mb-2">Subtotal</p>
-                        <p class="mb-2">${{ total_sum }}</p>
-                      </div>
-                      <div class="d-flex justify-content-between">
-                        <p class="mb-2">Shipping</p>
-                        <p class="mb-2">$20.00</p>
-                      </div>
-                      <div class="d-flex justify-content-between mb-4">
-                        <p class="mb-2">Total(Incl. taxes)</p>
-                        <p class="mb-2">${{ total_sum }}</p>
-                      </div>
-                      <button id="checkout-button" class="btn btn-info btn-block btn-lg">
-                        <div class="d-flex justify-content-between">
-                          <span>${{ total_sum }}</span>
-                          <span>Checkout <i class="fas fa-long-arrow-alt-right ms-2"></i></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                            
+
+                                <hr class="my-4">
+                                <div class="d-flex justify-content-between">
+                                    <p class="mb-2">Total Amount</p>
+                                    <p class="mb-2">{{ total_amount }}</p>
+                                </div>
+                                
+                                <button id="checkout-button" class="btn btn-info btn-block btn-lg">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Pay Now</span>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
-                      </button>
                     </div>
-                  </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
 </section>
-<script src="https://js.stripe.com/v3/"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        var stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
         document.getElementById('checkout-button').addEventListener('click', function () {
+            // Prepare data to send in the POST request body
+            var postData = {
+                'amount': "{{ total_amount }}",
+                'currency': 'INR',  // Assuming currency is fixed or fetched from backend response
+                // Add any other necessary data here
+            };
+
             fetch("{% url 'create_checkout_session' %}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
+                body: JSON.stringify(postData)  // Convert postData to JSON string
             })
             .then(function (response) {
                 if (!response.ok) {
@@ -99,12 +98,32 @@
                 if (data.error) {
                     throw new Error(data.error);
                 }
-                return stripe.redirectToCheckout({ sessionId: data.sessionId });
-            })
-            .then(function (result) {
-                if (result.error) {
-                    alert(result.error.message);
-                }
+                var options = {
+                    "key": "{{ settings.RAZORPAY_KEY_ID }}",
+                    "amount": data.amount,
+                    "currency": data.currency,
+                    "name": "Your Website Name",
+                    "description": "Payment for items in cart",
+                    "order_id": data.orderId,
+                    "handler": function (response){
+                        alert(response.razorpay_payment_id);
+                        alert(response.razorpay_order_id);
+                        alert(response.razorpay_signature);
+                    },
+                    "prefill": {
+                        "name": "Your Name",
+                        "email": "your_email@example.com",
+                        "contact": "9999999999"
+                    },
+                    "notes": {
+                        "address": "Your Address"
+                    },
+                    "theme": {
+                        "color": "#3399cc"
+                    }
+                };
+                var rzp1 = new Razorpay(options);
+                rzp1.open();
             })
             .catch(function (error) {
                 console.error('Error:', error);

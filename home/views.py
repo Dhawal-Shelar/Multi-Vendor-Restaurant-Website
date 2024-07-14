@@ -4,8 +4,10 @@ import logging
 from datetime import datetime
 import stripe
 from django.http import JsonResponse
-stripe.api_key = 'sk_test_51PZ88Z2K7YRi0VwqX3mTC5Gkgbfg55MIBCB8IBriLUQYLTbcVWBU3a2iTZYH7gtOsZ9evL7xwOzXjFCWOeO3HGAN0065iqIu6i'  # This should be set in settings.py, not here
-STRIPE_PUBLISHABLE_KEY = "pk_test_51PZ88Z2K7YRi0VwqiuyAgrjU8rAd0XusB69D4VRCv9TjCDFfbZLdeEjgmRG2vVXWwn8eq9eowMX24lAlFZufzSZo00MLgsQaIv"
+import razorpay
+
+RAZORPAY_KEY_ID = 'rzp_test_mvrpQw6DMA9i6b'
+RAZORPAY_KEY_SECRET = '2eHOP95bcTioYHVuKbeO1RL7'
 # Create your views here.
 def index(request):
     print(request.session.get("username"),'ddddddddd')
@@ -17,7 +19,7 @@ def index(request):
 
 
 def main(request):
-    cat = Category.objects.all()  # Get all categories
+    cat = Category.objects.all() 
     
     category = request.GET.get('category')
     counts = Menu.objects.count()
@@ -28,8 +30,7 @@ def main(request):
     if category:
         data = Menu.objects.filter(cat_name__category_name=str(category))
         counts = Menu.objects.filter(cat_name__category_name=str(category)).count()
-    
-    # Pass all context data in a single dictionary to render
+
     context = {
         'cat': cat,
         'data': data,
@@ -63,76 +64,123 @@ def add_to_cart(request ,item_id):
      
         return redirect('/deals')
         
+
+
+def remove_cart(request, item_id):
+    username = request.session.get('username')
+    
+    if username:
+        user = get_object_or_404(UserModel, username=username)
+        menu_item = get_object_or_404(Menu, pk=item_id)
+        
+        
+        order_item = get_object_or_404(OrderItems, user=user, items=menu_item)
+
+        if order_item.quantity > 0:
+            order_item.quantity -= 1
+            if order_item.quantity == 0:
+                order_item.delete()
+            else:
+                order_item.save()
+    
+    return redirect('view_cart')  
+
+
         
    
 def view_cart(request):
     user = request.session.get('username')
     order_items = []
-    total_sum = 0
+    total_amount = 0
 
     if user:
-        user_obj = UserModel.objects.get(username=user)
-        order_items = OrderItems.objects.filter(user=user_obj)
+        try:
+            user_obj = UserModel.objects.get(username=user)
+            order_items = OrderItems.objects.filter(user=user_obj)
 
-        for item in order_items:
-            total_sum += item.items.item_price * item.quantity
+     
+            total_amount = sum(item.items.item_price * item.quantity for item in order_items)
+            print(total_amount,'----------')
 
+        except UserModel.DoesNotExist:
+    
+            pass
+    
     context = {
         'order_items': order_items,
-        'total_sum': total_sum,
-        'STRIPE_PUBLISHABLE_KEY': STRIPE_PUBLISHABLE_KEY,
+        'total_amount': total_amount,
+        'RAZORPAY_KEY_ID': RAZORPAY_KEY_ID, 
     }
-    print("what is happing")
+
     return render(request, 'cart.html', context)
    
    
-   
 
-
-def create_checkout_session(request):
+def checkout(request):
+    # Dummy data for demonstration (replace with your actual logic)
     user = request.session.get('username')
-    if not user:
-        return JsonResponse({'error': 'User not authenticated'}, status=403)
+    user_obj = UserModel.objects.get(username=user)
+    order_items = OrderItems.objects.filter(user=user_obj)
+
+   
+    total_amount = sum(item['price'] * item['quantity'] for item in order_items)
+    print('dsddddd',total_amount)
     
-    try:
-        user_obj = UserModel.objects.get(username=user)
-        order_items = OrderItems.objects.filter(user=user_obj)
-        
-        line_items = []
-        for item in order_items:
-            line_items.append({
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': item.items.item_name,
-                    },
-                    'unit_amount': int(item.items.item_price * 100),  # Stripe requires integer amount in cents
-                },
-                'quantity': item.quantity,
-            })
+    context = {
+        'order_items': order_items,
+        'total_amount': total_amount,
+        'RAZORPAY_KEY_ID': RAZORPAY_KEY_ID,
+    }
+    return render(request, 'checkout.html', context)
 
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=line_items,
-            mode='payment',
-            success_url=request.build_absolute_uri('/success/'),
-            cancel_url=request.build_absolute_uri('/cancel/'),
-        )
-        
-        cart = Cart.objects.create(order_items=order_items, is_confirm=True, date_confirm=datetime.now())
-        cart.save()
+import json
+def create_checkout_session(request):
+    if request.method == 'POST':
+        try:
+            user = request.session.get('username')
+            if not user:
+                return JsonResponse({'error': 'User not authenticated'}, status=400)
+            
+            # Assuming UserModel is the model representing your user
+            user_instance = UserModel.objects.get(username=user)
+            
+            order_items = OrderItems.objects.filter(user=user_instance)
+            print(order_items, "this my order items")
+            
+            client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+            
+            data = json.loads(request.body)
+            data['amount'] = int(data['amount']) * 100
+    
+            razorpay_order = client.order.create(data=data)
+            
+            if razorpay_order['status'] == 'created':
+                # Create a Cart instance
+                cart = Cart.objects.create(user=user_instance, cart_items=order_items.first(), is_confirm=True, date_confirm=datetime.now())
+         
+                cart.save()
+          
+                order_items.delete()
+            
+            response_data = {
+                'orderId': razorpay_order['id'],
+                'amount': int(data['amount']),
+                'currency': data['currency'],
+                'status': razorpay_order['status'] 
+            }
+            
+            return JsonResponse(response_data)
 
-        logging.info(f"Checkout session created: {session.id}")
-        return JsonResponse({'sessionId': session.id})
-    except UserModel.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
-    except Exception as e:
-        logging.error(f"Error creating checkout session: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
-   
-   
-   
-   
+        except razorpay.errors.BadRequestError as e:
+            print(e)
+            return JsonResponse({'error': str(e)}, status=400)
+        
+        except Exception as e:
+            print(e)
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'POST request required'}, status=405)
+
    
 def logout(request):
     
@@ -146,7 +194,7 @@ def success(request):
     return render(request,"success.html")
    
    
-from django.shortcuts import render
+
 from .models import Cart, UserModel
 
 def profile(request):

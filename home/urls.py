@@ -11,12 +11,15 @@ urlpatterns = [
     path('sign-in/', signIn),
     path('login/', login),
     path('add_cart/<int:item_id>/', add_to_cart, name='add_cart'),  # Updated this line
-    path('cart/', view_cart),
+    
       path('cart/', view_cart, name='view_cart'),
+   path('checkout/', checkout, name='checkout'),
     path('create-checkout-session/', create_checkout_session, name='create_checkout_session'),
     path('success/', success),
     path("logout/", logout),
-    path('profile/', profile)
+    path('profile/', profile),
+   path('remove/<int:item_id>', remove_cart, name='remove_cart')
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
