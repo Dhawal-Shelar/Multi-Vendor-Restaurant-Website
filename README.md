@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-# Etclub
-=======
-# Multi-Vendor-Restaurant-Website
->>>>>>> origin/main
+THIS IS A MULTI VENDOR WEBSITE ADMIN: ADMIN
